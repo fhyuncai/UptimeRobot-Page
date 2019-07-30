@@ -7,6 +7,8 @@
  * Author: FHYunCai(https://yuncaioo.com)
  **/
 
+date_default_timezone_set("PRC");
+
 $cache_filename = 'uptimerobot.json'; //Cache filename
 $cache_timeout = 15; //Cache timeout time(Minutes)
 $uptimerobot_apikey = ''; //Your UptimeRobot APIKey 
@@ -14,6 +16,9 @@ $cron_key = 'fhyuncai'; //Cron key
 
 function curl_uptimerobot(){
     global $uptimerobot_apikey;
+    if(getenv('UptimeRobot_APIKey')){
+        $uptimerobot_apikey = getenv('UptimeRobot_APIKey');
+    }
     $curl = curl_init();
     curl_setopt_array($curl, array(
         CURLOPT_URL => 'https://api.uptimerobot.com/v2/getMonitors',
