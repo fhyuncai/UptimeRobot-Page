@@ -5,7 +5,6 @@
  * A status page based on UptimeRobot
  * Version: 1.0.0
  * Author: FHYunCai(https://yuncaioo.com)
- * 
  **/
 
 $cache_filename = 'uptimerobot.json'; //Cache filename
@@ -14,6 +13,7 @@ $uptimerobot_apikey = ''; //Your UptimeRobot APIKey
 $cron_key = 'fhyuncai'; //Cron key
 
 function curl_uptimerobot(){
+    global $uptimerobot_apikey;
     $curl = curl_init();
     curl_setopt_array($curl, array(
         CURLOPT_URL => 'https://api.uptimerobot.com/v2/getMonitors',
