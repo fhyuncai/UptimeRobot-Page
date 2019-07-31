@@ -3,29 +3,33 @@
 /**
  * UptimeRobot-Page
  * A status page based on UptimeRobot
- * Version: 1.0.0
+ * Version: 1.0.1
+ * Update time: 2019-07-31
  * Author: FHYunCai(https://yuncaioo.com)
  **/
 
-date_default_timezone_set("PRC");
-
+$page_title = 'Service Status'; //Page title
 $cache_filename = 'uptimerobot.json'; //Cache filename
-$cache_timeout = 15; //Cache timeout time(Minutes)
+$cache_timeout = 15; //Cache timeout(Minutes)
 $uptimerobot_apikey = ''; //Your UptimeRobot APIKey 
 $cron_key = 'fhyuncai'; //Cron key
 
+date_default_timezone_set("PRC");
+
+$cache_filename = getenv('Cache_Filename')?getenv('Cache_Filename'):$cache_filename;
+$cache_timeout = getenv('Cache_Timeout')?getenv('Cache_Timeout'):$cache_timeout;
+$uptimerobot_apikey = getenv('UptimeRobot_APIKey')?getenv('UptimeRobot_APIKey'):$uptimerobot_apikey;
+$cron_key = getenv('Cron_Key')?getenv('Cron_Key'):$cron_key;
+
 function curl_uptimerobot(){
     global $uptimerobot_apikey;
-    if(getenv('UptimeRobot_APIKey')){
-        $uptimerobot_apikey = getenv('UptimeRobot_APIKey');
-    }
     $curl = curl_init();
     curl_setopt_array($curl, array(
         CURLOPT_URL => 'https://api.uptimerobot.com/v2/getMonitors',
         CURLOPT_RETURNTRANSFER => true,
         CURLOPT_ENCODING => '',
         CURLOPT_MAXREDIRS => 10,
-        CURLOPT_TIMEOUT => 30,
+        CURLOPT_TIMEOUT => 10,
         CURLOPT_HTTP_VERSION => CURL_HTTP_VERSION_1_1,
         CURLOPT_CUSTOMREQUEST => 'POST',
         CURLOPT_POSTFIELDS => 'api_key='.$uptimerobot_apikey.'&format=json&logs=1',
@@ -65,8 +69,8 @@ if(file_exists(__DIR__.'/'.$cache_filename)){
     }
 }
 
-if(!$_GET['cron'] == $cron_key){
-    echo '<!DOCTYPE html><html><head><meta charset="utf-8"><meta name="viewport" content="width=device-width"><title>Service Status</title><link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/mdui@0.4.3/dist/css/mdui.min.css"/><style>h1{font-weight:400;font-family:Helvetica;font-size:40px;margin-top:0px}.main-container{padding-top:30px;padding-bottom:80px}.icon-status{border-radius:100%}.icon{height:1em;width:1em;display:block;background-repeat:no-repeat;display:inline-block;margin: 7px 5px 0 0}</style></head><body class="mdui-color-blue-grey-50"><div class="mdui-container main-container"><div class="mdui-col-md-3"></div><div class="mdui-col-md-6"><h1 class="mdui-text-color-theme">Service Status</h1>';
+if($_GET['cron'] != $cron_key){
+    echo '<!DOCTYPE html><html><head><meta charset="utf-8"><meta name="viewport" content="width=device-width"><title>'.$page_title.'</title><link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/mdui@0.4.3/dist/css/mdui.min.css"/><style>h1{font-weight:400;font-family:Helvetica;font-size:40px;margin-top:0px}.main-container{padding-top:30px;padding-bottom:80px}.icon-status{border-radius:100%}.icon{height:1em;width:1em;display:block;background-repeat:no-repeat;display:inline-block;margin: 7px 5px 0 0}</style></head><body class="mdui-color-blue-grey-50"><div class="mdui-container main-container"><div class="mdui-col-md-3"></div><div class="mdui-col-md-6"><h1 class="mdui-text-color-theme">'.$page_title.'</h1>';
     echo '<p>Last check at '.date('Y-m-d H:i',$json_last_time).'</p>';
     echo '<div class="mdui-table-fluid">';
 
@@ -83,16 +87,16 @@ if(!$_GET['cron'] == $cron_key){
             echo '<table class="mdui-table mdui-table-hoverable"><thead><tr><th>'.$monitor_name_arr[0].'</th><th class="mdui-table-col-numeric"></th></tr></thead><tbody>';
         }
         if($monitor->status == 2){
-            $status = 'Operational';//#6ac259
+            $status = 'Operational';
             $status_color = '6ac259';
         }elseif($monitor->status == 8){
-            $status = 'Seems down';//#ffdd57
+            $status = 'Seems down';
             $status_color = 'ffdd57';
         }elseif($monitor->status == 9){
-            $status = 'Down';//#f05228
+            $status = 'Down';
             $status_color = 'f05228';
         }else{
-            $status = 'Paused';//#111
+            $status = 'Paused';
             $status_color = '111';
         }
         echo '<tr><td><div class="icon icon-status" style="background-color:#'.$status_color.'"></div>'.$monitor_name_arr[1].'</td><td>'.$status.'</td></tr>';
