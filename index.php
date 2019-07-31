@@ -16,6 +16,7 @@ $cron_key = 'fhyuncai'; //Cron key
 
 date_default_timezone_set("PRC");
 
+$page_title = getenv('Page_Title')?getenv('Page_Title'):$page_title;
 $cache_filename = getenv('Cache_Filename')?getenv('Cache_Filename'):$cache_filename;
 $cache_timeout = getenv('Cache_Timeout')?getenv('Cache_Timeout'):$cache_timeout;
 $uptimerobot_apikey = getenv('UptimeRobot_APIKey')?getenv('UptimeRobot_APIKey'):$uptimerobot_apikey;
