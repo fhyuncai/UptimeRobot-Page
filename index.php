@@ -32,6 +32,8 @@ function curl_uptimerobot(){
         CURLOPT_MAXREDIRS => 10,
         CURLOPT_TIMEOUT => 10,
         CURLOPT_HTTP_VERSION => CURL_HTTP_VERSION_1_1,
+	    CURLOPT_SSL_VERIFYPEER=>false,
+	    CURLOPT_SSL_VERIFYHOST=>false,
         CURLOPT_CUSTOMREQUEST => 'POST',
         CURLOPT_POSTFIELDS => 'api_key='.$setting['uptimerobot_apikey'].'&format=json&logs=1',
         CURLOPT_HTTPHEADER => array(
