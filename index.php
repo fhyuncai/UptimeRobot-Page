@@ -139,6 +139,7 @@ if($_GET['cron'] != $setting['cron_key']){
     </div>
     <script src="https://cdn.jsdelivr.net/npm/mdui@0.4.3/dist/js/mdui.min.js"></script>
 </body>
-</html>';
+</html>
+<?php
 }
 ?>
