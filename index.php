@@ -71,11 +71,24 @@ if(file_exists(__DIR__.'/'.$cache['filename'])){
         $json_last_time = time();
     }
 }
-
+?>
+<!DOCTYPE html>
+<html>
+<head>
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width">
+    <title><?php echo $page['title'] ?></title>
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/mdui@0.4.3/dist/css/mdui.min.css"/>
+    <style>h1{font-weight:400;font-family:Helvetica;font-size:40px;margin-top:0px}.main-container{padding-top:30px;padding-bottom:80px}.icon-status{border-radius:100%}.icon{height:1em;width:1em;display:block;background-repeat:no-repeat;display:inline-block;margin: 7px 5px 0 0}</style>
+</head>
+<body class="mdui-color-blue-grey-50">
+    <div class="mdui-container main-container">
+        <div class="mdui-col-md-3"></div>
+        <div class="mdui-col-md-6"><h1 class="mdui-text-color-theme"><?php echo $page['title'] ?></h1>
+        <p>Last check at <?php echo date('Y-m-d H:i',$json_last_time) ?></p>
+        <div class="mdui-table-fluid">
+<?php
 if($_GET['cron'] != $setting['cron_key']){
-    echo '<!DOCTYPE html><html><head><meta charset="utf-8"><meta name="viewport" content="width=device-width"><title>'.$page['title'].'</title><link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/mdui@0.4.3/dist/css/mdui.min.css"/><style>h1{font-weight:400;font-family:Helvetica;font-size:40px;margin-top:0px}.main-container{padding-top:30px;padding-bottom:80px}.icon-status{border-radius:100%}.icon{height:1em;width:1em;display:block;background-repeat:no-repeat;display:inline-block;margin: 7px 5px 0 0}</style></head><body class="mdui-color-blue-grey-50"><div class="mdui-container main-container"><div class="mdui-col-md-3"></div><div class="mdui-col-md-6"><h1 class="mdui-text-color-theme">'.$page['title'].'</h1>';
-    echo '<p>Last check at '.date('Y-m-d H:i',$json_last_time).'</p>';
-    echo '<div class="mdui-table-fluid">';
 
     $json_decode = json_decode(file_get_contents(__DIR__.'/'.$cache['filename']))->content;
 
@@ -83,11 +96,23 @@ if($_GET['cron'] != $setting['cron_key']){
     foreach($json_decode->monitors as $monitor){
         $monitor_name_arr = explode('/',$monitor->friendly_name);
         if(!in_array($monitor_name_arr[0],$group)){
-            if(!count($group) == 0){
-                echo '</tbody></table>';
-            }
+            if(!count($group) == 0):
+?>
+                </tbody>
+            </table>
+<?php
+            endif;
             $group[] = $monitor_name_arr[0];
-            echo '<table class="mdui-table mdui-table-hoverable"><thead><tr><th>'.$monitor_name_arr[0].'</th><th class="mdui-table-col-numeric"></th></tr></thead><tbody>';
+?>
+            <table class="mdui-table mdui-table-hoverable">
+                <thead>
+                    <tr>
+                        <th><?php echo $monitor_name_arr[0] ?></th>
+                        <th class="mdui-table-col-numeric"></th>
+                    </tr>
+                </thead>
+                <tbody>
+<?php
         }
         if($monitor->status == 2){
             $status = 'Operational';
@@ -102,7 +127,18 @@ if($_GET['cron'] != $setting['cron_key']){
             $status = 'Paused';
             $status_color = '111';
         }
-        echo '<tr><td><div class="icon icon-status" style="background-color:#'.$status_color.'"></div>'.$monitor_name_arr[1].'</td><td>'.$status.'</td></tr>';
+?>
+                    <tr>
+                        <td><div class="icon icon-status" style="background-color:#'.$status_color.'"></div><?php echo $monitor_name_arr[1] ?></td>
+                        <td><?php echo $status ?></td>
+                    </tr>
+<?php
     }
-    echo '</div></div><script src="https://cdn.jsdelivr.net/npm/mdui@0.4.3/dist/js/mdui.min.js"></script></body></html>';
+?>
+        </div>
+    </div>
+    <script src="https://cdn.jsdelivr.net/npm/mdui@0.4.3/dist/js/mdui.min.js"></script>
+</body>
+</html>';
 }
+?>
