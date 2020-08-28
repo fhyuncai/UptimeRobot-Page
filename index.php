@@ -114,18 +114,23 @@ if($_GET['cron'] != $setting['cron_key']){
                 <tbody>
 <?php
         }
-        if($monitor->status == 2){
-            $status = 'Operational';
-            $status_color = '6ac259';
-        }elseif($monitor->status == 8){
-            $status = 'Seems down';
-            $status_color = 'ffdd57';
-        }elseif($monitor->status == 9){
-            $status = 'Down';
-            $status_color = 'f05228';
-        }else{
-            $status = 'Paused';
-            $status_color = '111';
+        switch ($monitor->status) {
+            case 2:
+                $status = 'Operational';
+                $status_color = '6AC259';
+            break;
+            case 8:
+                $status = 'Seems down';
+                $status_color = 'FFDD57';
+            break;
+            case 9:
+                $status = "Down";
+                $status_color = 'F05228';
+            break;
+            default:
+                $status = "Paused";
+                $status_color = "111";
+            break;
         }
 ?>
                     <tr>
