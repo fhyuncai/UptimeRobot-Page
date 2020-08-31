@@ -3,29 +3,147 @@
 /**
  * UptimeRobot-Page
  * A status page based on UptimeRobot
- * Version: 1.0.3
- * Update time: 2020-01-29
- * Author: FHYunCai(https://yuncaioo.com)
+ * Version: 1.2
+ * Update time: 2020-08-31
+ * Author: FHYunCai (https://yuncaioo.com)
  **/
 
-$page['title'] = 'Service Status'; //Page title
-$cache['filename'] = 'uptimerobot.json'; //Cache filename
-$cache['timeout'] = 15; //Cache timeout (Minutes)
-$setting['uptimerobot_apikey'] = ''; //Your UptimeRobot APIkey 
-$setting['cron_key'] = 'fhyuncai'; //Cron key
+date_default_timezone_set('PRC');
 
-date_default_timezone_set("PRC");
+//Config Start
+$dir_data = 'uptimerobot'; //Data directory name
+//Note: The remaining configuration items are in the Data directory / config.json
+//Config End
 
-$page['title'] = getenv('Page_Title')?getenv('Page_Title'):$page['title'];
-$cache['filename'] = getenv('Cache_Filename')?getenv('Cache_Filename'):$cache['filename'];
-$cache['timeout'] = getenv('Cache_Timeout')?getenv('Cache_Timeout'):$cache['timeout'];
-$setting['uptimerobot_apikey'] = getenv('UptimeRobot_APIKey')?getenv('UptimeRobot_APIKey'):$setting['uptimerobot_apikey'];
-$setting['cron_key'] = getenv('Cron_Key')?getenv('Cron_Key'):$setting['cron_key'];
+if (!is_dir(__DIR__ . '/' . $dir_data . '/cache/' . date("Y/m/d"))) mkdir(__DIR__ . '/' . $dir_data . '/cache/' . date("Y/m/d"), 0755, true);
 
-function curl_uptimerobot(){
-    global $setting;
+if (!is_file(__DIR__ . '/' . $dir_data . '/config.json')) {
+    file_put_contents(__DIR__ . '/' . $dir_data . '/config.json', json_encode(['page_title' => 'Service Status', 'cache_timeout' => 15, 'uptimerobot_apikey' => '', 'cron_key' => 'fhyuncai']));
+}
+
+if (empty(getenv('Page_Config'))) {
+    $config_json = file_get_contents(__DIR__ . '/' . $dir_data . '/config.json');
+} else {
+    $config_json = getenv('Page_Config');
+}
+check_json($config_json);
+
+$config_json = json_decode($config_json);
+$config_arr = [
+    'page_title' => $config_json->page_title ? $config_json->page_title : 'Service Status',
+    'cache_timeout' => $config_json->cache_timeout ? $config_json->cache_timeout : 15,
+    'uptimerobot_apikey' => $config_json->uptimerobot_apikey ? $config_json->uptimerobot_apikey : '',
+    'cron_key' => $config_json->cron_key ? $config_json->cron_key : 'fhyuncai'
+];
+
+if (empty($config_arr['uptimerobot_apikey'])) die('You have to configure the Uptimerobot key in file <i>' . $dir_data . '/config.json</i>');
+
+//Read and update data
+if (is_file(__DIR__ . '/' . $dir_data . '/cache/cache.json') && $_GET['cron'] != $config_arr['cron_key']) {
+    $json_last_time = json_decode(file_get_contents(__DIR__ . '/' . $dir_data . '/cache/cache.json'))->time;
+    if ($json_last_time < time() - ($config_arr['cache_timeout'] * 60)) {
+        update_data();
+        $json_last_time = time();
+    }
+} else {
+    update_data();
+    $json_last_time = time();
+}
+
+
+if ($_GET['cron'] != $config_arr['cron_key']) {
+    //Calculate availability
+    for ($i = 1; $i <= 30; $i++) {
+        $date = date("Y/m/d", strtotime('-' . $i . ' day'));
+        if (is_dir(__DIR__ . '/' . $dir_data . '/cache/' . $date)) {
+            $cache_file_arr = scandir(__DIR__ . '/' . $dir_data . '/cache/' . $date);
+            foreach ($cache_file_arr as $value) {
+                if ($value == '.' || $value == '..') continue;
+                if (!strstr($value, '.json')) continue;
+                $json_str = file_get_contents(__DIR__ . '/' . $dir_data . '/cache/' . $date . '/' . $value);
+                check_json($json_str);
+                foreach (json_decode($json_str)->monitors as $value) {
+                    $cache_data_arr[$value->name][] = $value->status;
+                }
+            }
+            if (isset($cache_data_arr)) {
+                foreach ($cache_data_arr as $key => $value) {
+                    $check_num = count($value);
+                    $check_up = 0;
+                    foreach ($value as $value) {
+                        if ($value == 2) $check_up++;
+                    }
+                    $act_per_day_arr[$key][$i] = round($check_up / $check_num * 100, 2); //Percentage per day
+                }
+                unset($cache_data_arr);
+            }
+        }
+    }
+    if (isset($act_per_day_arr)) {
+        foreach ($act_per_day_arr as $key => $value) {
+            $act_per_arr[$key] = round(array_sum($value) / count($value), 2); //Percentage of 30days
+        }
+    }
+
+    echo '<!DOCTYPE html><html><head><meta charset="utf-8"><meta name="viewport"content="width=device-width, initial-scale=1"><title>' . $config_arr['page_title'] . '</title><link rel="stylesheet"href="https://cdn.jsdelivr.net/npm/bootstrap@4.5.2/dist/css/bootstrap.min.css"><script src="https://cdn.jsdelivr.net/npm/jquery@3.2.1/dist/jquery.min.js"></script><script src="https://cdn.jsdelivr.net/npm/popper.js@1.16.1/dist/umd/popper.min.js"></script><script src="https://cdn.jsdelivr.net/npm/bootstrap@4.5.2/dist/js/bootstrap.min.js"></script><style>.theme{background:#eef2f6}.title{margin:1em 0;margin-left:1px}.desc{font-size:80%;margin-left:1px}.item-desc{font-size:.8em;margin-top:.8em;margin-bottom:.5em}.icon-status{height:1em;width:1em;display:block;margin-top:auto!important;margin-bottom:auto!important;background-repeat:no-repeat;border-radius:100%}.icon-uptime{height:1.5em;width:100%;margin:0 1px;opacity:.75}.icon-status.up,.icon-uptime.up{background:#6ac259}.icon-status.seemdown,.icon-uptime.seemdown{background:#ffdd57}.icon-status.down,.icon-uptime.down{background:#f05228}.icon-status.pause,.icon-uptime.pause{background:#111}.icon-uptime.nodata{background:#e5e5e5}</style></head>';
+    echo '<body class="theme"><div class="container col-sm-7 col-lg-5 mb-4"><h4 class="font-weight-normal title">' . $config_arr['page_title'] . '</h4><p class="desc">Last check at ' . date('Y-m-d H:i', $json_last_time) . '<p>';
+    echo '<ul class="list-group">';
+
+    $json_decode = json_decode(file_get_contents(__DIR__ . '/' . $dir_data . '/cache/cache.json'));
+
+    $group = [];
+    foreach ($json_decode->monitors as $monitor) {
+        $monitor_name_arr = explode('/', $monitor->name);
+        if (!in_array($monitor_name_arr[0], $group)) {
+            $group[] = $monitor_name_arr[0];
+            echo '<li class="list-group-item"><b>' . $monitor_name_arr[0] . '</b></li>';
+        }
+        switch ($monitor->status) {
+            case 2:
+                $status = ['status' => 'Operational', 'class' => 'up'];
+                break;
+            case 8:
+                $status = ['status' => 'Seems down', 'class' => 'seemdown'];
+                break;
+            case 9:
+                $status = ['status' => 'Down', 'class' => 'down'];
+                break;
+            default:
+                $status = ['status' => 'Paused', 'class' => 'pause'];
+                break;
+        }
+        echo '<li class="list-group-item"><div class="d-flex justify-content-between">' . $monitor_name_arr[1] . '<div class="icon-status ' . $status['class'] . '" data-toggle="icon-status" title="' . $status['status'] . '"></div></div>';
+        $uptime_per = isset($act_per_arr[$monitor->name]) ? $act_per_arr[$monitor->name] : 100;
+        echo '<div class="item-desc"><strong>' . $uptime_per . '%</strong> uptime for the last 30 days.</div>';
+        echo '<div class="d-flex">';
+        for ($i = 1; $i <= 30; $i++) {
+            $uptime_day_per = $act_per_day_arr[$monitor->name][$i];
+            if (!isset($uptime_day_per)) {
+                $uptime_status = 'nodata';
+            } elseif ($uptime_day_per == 100) {
+                $uptime_status = 'up';
+            } elseif ($uptime_day_per >= 95 && $uptime_day_per < 100) {
+                $uptime_status = 'seemdown';
+            } elseif ($uptime_day_per > 0 && $uptime_day_per < 95) {
+                $uptime_status = 'down';
+            } elseif ($uptime_day_per == 0) {
+                $uptime_status = 'pause';
+            }
+            echo '<div class="icon-uptime ' . $uptime_status . '"></div>';
+        }
+        echo '</div></li>';
+    }
+    echo '</ul></div><script>$(function(){$(\'[data-toggle="icon-status"]\').tooltip()});</script></body></html>';
+} else {
+    echo 'Data update success';
+}
+
+//Functions
+function curl_uptimerobot()
+{
+    global $config_arr;
     $curl = curl_init();
-    curl_setopt_array($curl, array(
+    curl_setopt_array($curl, [
         CURLOPT_URL => 'https://api.uptimerobot.com/v2/getMonitors',
         CURLOPT_RETURNTRANSFER => true,
         CURLOPT_ENCODING => '',
@@ -35,74 +153,41 @@ function curl_uptimerobot(){
         CURLOPT_SSL_VERIFYPEER => false,
         CURLOPT_SSL_VERIFYHOST => false,
         CURLOPT_CUSTOMREQUEST => 'POST',
-        CURLOPT_POSTFIELDS => 'api_key='.$setting['uptimerobot_apikey'].'&format=json&logs=1',
-        CURLOPT_HTTPHEADER => array(
+        CURLOPT_POSTFIELDS => 'api_key=' . $config_arr['uptimerobot_apikey'] . '&format=json&logs=1',
+        CURLOPT_HTTPHEADER => [
             'cache-control: no-cache',
             'content-type: application/x-www-form-urlencoded'
-        ),
-    ));
+        ],
+    ]);
+
     $response = curl_exec($curl);
     $err = curl_error($curl);
     curl_close($curl);
-    if($err){
-        return 'error';
-    }else{
+    if ($err) {
+        die('Curl error');
+    } else {
         return $response;
     }
 }
 
-if(file_exists(__DIR__.'/'.$cache['filename'])){
-    $json_last_time = json_decode(file_get_contents(__DIR__.'/'.$cache['filename']))->time;
-    if($json_last_time < time()-($cache['timeout']*60) || $_GET['cron'] == $setting['cron_key']){
-        $json_curl = curl_uptimerobot();
-        if($json_curl == 'error'){
-            die('Curl error!');
-        }else{
-            $json_put = file_put_contents(__DIR__.'/'.$cache['filename'],json_encode(array('time' => time(),'content' => json_decode($json_curl))));
-            $json_last_time = time();
-        }
-    }
-}else{
+function update_data()
+{
+    global $dir_data;
     $json_curl = curl_uptimerobot();
-    if($json_curl == 'error'){
-        die('Curl error!');
-    }else{
-        $json_put = file_put_contents(__DIR__.'/'.$cache['filename'],json_encode(array('time' => time(),'content' => json_decode($json_curl))));
-        $json_last_time = time();
+    if (is_file(__DIR__ . '/' . $dir_data . '/cache/cache.json')) {
+        $json_old_time = json_decode(file_get_contents(__DIR__ . '/' . $dir_data . '/cache/cache.json'))->time;
+        copy(__DIR__ . '/' . $dir_data . '/cache/cache.json', __DIR__ . '/' . $dir_data . '/cache/' . date("Y/m/d", $json_old_time) . '/' . $json_old_time . '.json');
     }
+    $json_arr = json_decode($json_curl);
+    foreach ($json_arr->monitors as $value) {
+        $json_arr_monitors[] = ['name' => $value->friendly_name, 'url' => $value->url, 'status' => $value->status];
+    }
+    file_put_contents(__DIR__ . '/' . $dir_data . '/cache/cache.json', json_encode(array('time' => time(), 'monitors' => $json_arr_monitors)));
+    return;
 }
 
-if($_GET['cron'] != $setting['cron_key']){
-    echo '<!DOCTYPE html><html><head><meta charset="utf-8"><meta name="viewport" content="width=device-width"><title>'.$page['title'].'</title><link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/mdui@0.4.3/dist/css/mdui.min.css"/><style>h1{font-weight:400;font-family:Helvetica;font-size:40px;margin-top:0px}.main-container{padding-top:30px;padding-bottom:80px}.icon-status{border-radius:100%}.icon{height:1em;width:1em;display:block;background-repeat:no-repeat;display:inline-block;margin: 7px 5px 0 0}</style></head><body class="mdui-color-blue-grey-50"><div class="mdui-container main-container"><div class="mdui-col-md-3"></div><div class="mdui-col-md-6"><h1 class="mdui-text-color-theme">'.$page['title'].'</h1>';
-    echo '<p>Last check at '.date('Y-m-d H:i',$json_last_time).'</p>';
-    echo '<div class="mdui-table-fluid">';
-
-    $json_decode = json_decode(file_get_contents(__DIR__.'/'.$cache['filename']))->content;
-
-    $group = array();
-    foreach($json_decode->monitors as $monitor){
-        $monitor_name_arr = explode('/',$monitor->friendly_name);
-        if(!in_array($monitor_name_arr[0],$group)){
-            if(!count($group) == 0){
-                echo '</tbody></table>';
-            }
-            $group[] = $monitor_name_arr[0];
-            echo '<table class="mdui-table mdui-table-hoverable"><thead><tr><th>'.$monitor_name_arr[0].'</th><th class="mdui-table-col-numeric"></th></tr></thead><tbody>';
-        }
-        if($monitor->status == 2){
-            $status = 'Operational';
-            $status_color = '6ac259';
-        }elseif($monitor->status == 8){
-            $status = 'Seems down';
-            $status_color = 'ffdd57';
-        }elseif($monitor->status == 9){
-            $status = 'Down';
-            $status_color = 'f05228';
-        }else{
-            $status = 'Paused';
-            $status_color = '111';
-        }
-        echo '<tr><td><div class="icon icon-status" style="background-color:#'.$status_color.'"></div>'.$monitor_name_arr[1].'</td><td>'.$status.'</td></tr>';
-    }
-    echo '</div></div><script src="https://cdn.jsdelivr.net/npm/mdui@0.4.3/dist/js/mdui.min.js"></script></body></html>';
+function check_json($str)
+{
+    if (is_null(json_decode($str))) die('Json error');
+    return;
 }

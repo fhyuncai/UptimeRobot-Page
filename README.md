@@ -2,23 +2,23 @@
 
 A status page based on [UptimeRobot](https://uptimerobot.com)
 
-![Version](https://img.shields.io/badge/Verison-1.0.3-blue)
+![Version](https://img.shields.io/badge/Verison-1.2-blue)
 ![GitHub](https://img.shields.io/github/license/fhyuncai/UptimeRobot-Page)
 
 ## Requirements
 
-* PHP Version >= 5.3
-* UptimeRobot APIKey
+* PHP version >= 5.3
+* Uptimerobot account
 
 ## Deploy
 
 ```bash
-wget https://raw.githubusercontent.com/fhyuncai/UptimeRobot-Page/master/index.php
+curl -O https://raw.githubusercontent.com/fhyuncai/UptimeRobot-Page/master/index.php
 ```
 
 ## Configure
 
-config files in `index.php`
+Edit `index.php` configuration data directory, and access this file to configuration.
 
 ## Group Usage
 
