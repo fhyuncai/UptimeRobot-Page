@@ -3,8 +3,8 @@
 /**
  * UptimeRobot-Page
  * A status page based on UptimeRobot
- * Version: 1.2
- * Update time: 2020-08-31
+ * Version: 1.2.2
+ * Update time: 2020-09-10
  * Author: FHYunCai (https://yuncaioo.com)
  **/
 
@@ -14,6 +14,8 @@ date_default_timezone_set('PRC');
 $dir_data = 'uptimerobot'; //Data directory name
 //Note: The remaining configuration items are in the Data directory / config.json
 //Config End
+
+$record_time_s = explode(' ', microtime());
 
 if (!is_dir(__DIR__ . '/' . $dir_data . '/cache/' . date("Y/m/d"))) mkdir(__DIR__ . '/' . $dir_data . '/cache/' . date("Y/m/d"), 0755, true);
 
@@ -85,8 +87,8 @@ if ($_GET['cron'] != $config_arr['cron_key']) {
         }
     }
 
-    echo '<!DOCTYPE html><html><head><meta charset="utf-8"><meta name="viewport"content="width=device-width, initial-scale=1"><title>' . $config_arr['page_title'] . '</title><link rel="stylesheet"href="https://cdn.jsdelivr.net/npm/bootstrap@4.5.2/dist/css/bootstrap.min.css"><script src="https://cdn.jsdelivr.net/npm/jquery@3.2.1/dist/jquery.min.js"></script><script src="https://cdn.jsdelivr.net/npm/popper.js@1.16.1/dist/umd/popper.min.js"></script><script src="https://cdn.jsdelivr.net/npm/bootstrap@4.5.2/dist/js/bootstrap.min.js"></script><style>.theme{background:#eef2f6}.title{margin:1em 0;margin-left:1px}.desc{font-size:80%;margin-left:1px}.item-desc{font-size:.8em;margin-top:.8em;margin-bottom:.5em}.icon-status{height:1em;width:1em;display:block;margin-top:auto!important;margin-bottom:auto!important;background-repeat:no-repeat;border-radius:100%}.icon-uptime{height:1.5em;width:100%;margin:0 1px;opacity:.75}.icon-status.up,.icon-uptime.up{background:#6ac259}.icon-status.seemdown,.icon-uptime.seemdown{background:#ffdd57}.icon-status.down,.icon-uptime.down{background:#f05228}.icon-status.pause,.icon-uptime.pause{background:#111}.icon-uptime.nodata{background:#e5e5e5}</style></head>';
-    echo '<body class="theme"><div class="container col-sm-7 col-lg-5 mb-4"><h4 class="font-weight-normal title">' . $config_arr['page_title'] . '</h4><p class="desc">Last check at ' . date('Y-m-d H:i', $json_last_time) . '<p>';
+    echo '<!DOCTYPE html><html><head><meta charset="utf-8"><meta name="viewport"content="width=device-width, initial-scale=1"><title>' . $config_arr['page_title'] . '</title><link rel="stylesheet"href="https://cdn.jsdelivr.net/npm/bootstrap@4.5.2/dist/css/bootstrap.min.css"><script src="https://cdn.jsdelivr.net/npm/jquery@3.2.1/dist/jquery.min.js"></script><script src="https://cdn.jsdelivr.net/npm/popper.js@1.16.1/dist/umd/popper.min.js"></script><script src="https://cdn.jsdelivr.net/npm/bootstrap@4.5.2/dist/js/bootstrap.min.js"></script><style>.theme{background:#eef2f6}.main{max-width:600px}.title{margin:1em 0;margin-left:1px}.desc{font-size:80%;margin-left:1px}.item-desc{font-size:.8em;margin-top:.8em;margin-bottom:.5em}.icon-status{height:1em;width:1em;display:block;margin-top:auto!important;margin-bottom:auto!important;background-repeat:no-repeat;border-radius:100%}.icon-uptime{height:1.5em;width:100%;margin:0 1px;opacity:.75}.icon-status.up,.icon-uptime.up{background:#6ac259}.icon-status.seemdown,.icon-uptime.seemdown{background:#ffdd57}.icon-status.down,.icon-uptime.down{background:#f05228}.icon-status.pause,.icon-uptime.pause{background:#111}.icon-uptime.nodata{background:#e5e5e5}</style></head>';
+    echo '<body class="theme"><div class="container main mb-4"><h4 class="font-weight-normal title">' . $config_arr['page_title'] . '</h4><p class="desc">Last check at ' . date('Y-m-d H:i', $json_last_time) . '<p>';
     echo '<ul class="list-group">';
 
     $json_decode = json_decode(file_get_contents(__DIR__ . '/' . $dir_data . '/cache/cache.json'));
@@ -134,6 +136,8 @@ if ($_GET['cron'] != $config_arr['cron_key']) {
         echo '</div></li>';
     }
     echo '</ul></div><script>$(function(){$(\'[data-toggle="icon-status"]\').tooltip()});</script></body></html>';
+    $record_time_e = explode(' ', microtime());
+    echo '<!--Exec time: ' . round($record_time_e[0] + $record_time_e[1] - ($record_time_s[0] + $record_time_s[1]), 5) . '-->';
 } else {
     echo 'Data update success';
 }
