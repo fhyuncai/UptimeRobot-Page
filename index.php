@@ -3,7 +3,7 @@
 /**
  * UptimeRobot-Page
  * Status page based on UptimeRobot
- * Version: 1.4
+ * Version: 1.41
  * Update time: 2022-07-17
  * Author: FHYunCai (https://yuncaioo.com)
  **/
@@ -193,17 +193,19 @@ function calculate()
                     }
                     $act_per_day_arr[$key][$i] = round($check_up / $check_num * 100, 2); //Percentage per day
                 }
-                $saveData = ['act_per_day_arr' => $act_per_day_arr];
                 unset($cache_data_arr);
             }
         }
     }
+    $saveData = ['act_per_day_arr' => $act_per_day_arr];
+
     if (isset($act_per_day_arr)) {
         foreach ($act_per_day_arr as $key => $value) {
             $act_per_arr[$key] = round(array_sum($value) / count($value), 2); //Percentage of 30days
         }
         $saveData['act_per_arr'] = $act_per_arr;
     }
+
     file_put_contents(__DIR__ . '/' . DATADIR . '/cache/cache.json', json_encode($saveData));
 }
 

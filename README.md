@@ -2,7 +2,7 @@
 
 A status page based on [UptimeRobot](https://uptimerobot.com)
 
-![Version](https://img.shields.io/badge/Verison-1.4-blue?style=flat-square)
+![Version](https://img.shields.io/badge/Verison-1.41-blue?style=flat-square)
 ![GitHub](https://img.shields.io/github/license/fhyuncai/UptimeRobot-Page?style=flat-square)
 
 ## Requirements
