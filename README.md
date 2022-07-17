@@ -2,13 +2,13 @@
 
 A status page based on [UptimeRobot](https://uptimerobot.com)
 
-![Version](https://img.shields.io/badge/Verison-1.2-blue)
-![GitHub](https://img.shields.io/github/license/fhyuncai/UptimeRobot-Page)
+![Version](https://img.shields.io/badge/Verison-1.31-blue?style=flat-square)
+![GitHub](https://img.shields.io/github/license/fhyuncai/UptimeRobot-Page?style=flat-square)
 
 ## Requirements
 
-* PHP version >= 5.3
-* Uptimerobot account
+* PHP version >= 5.4
+* UptimeRobot account
 
 ## Deploy
 

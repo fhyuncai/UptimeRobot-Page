@@ -2,29 +2,32 @@
 
 /**
  * UptimeRobot-Page
- * A status page based on UptimeRobot
- * Version: 1.2.2
- * Update time: 2020-09-10
+ * Status page based on UptimeRobot
+ * Version: 1.31
+ * Update time: 2022-07-17
  * Author: FHYunCai (https://yuncaioo.com)
  **/
 
 date_default_timezone_set('PRC');
 
-//Config Start
-$dir_data = 'uptimerobot'; //Data directory name
-//Note: The remaining configuration items are in the Data directory / config.json
-//Config End
+/* Config Start */
+
+define('DATADIR', 'uptimerobot'); // Data directory
+
+// Note: The remaining configuration items are in the ([Data directory]/config.json)
+
+/* Config End */
 
 $record_time_s = explode(' ', microtime());
 
-if (!is_dir(__DIR__ . '/' . $dir_data . '/cache/' . date("Y/m/d"))) mkdir(__DIR__ . '/' . $dir_data . '/cache/' . date("Y/m/d"), 0755, true);
+if (!is_dir(__DIR__ . '/' . DATADIR . '/cache/' . date("Y/m/d"))) mkdir(__DIR__ . '/' . DATADIR . '/cache/' . date("Y/m/d"), 0755, true);
 
-if (!is_file(__DIR__ . '/' . $dir_data . '/config.json')) {
-    file_put_contents(__DIR__ . '/' . $dir_data . '/config.json', json_encode(['page_title' => 'Service Status', 'cache_timeout' => 15, 'uptimerobot_apikey' => '', 'cron_key' => 'fhyuncai']));
+if (!is_file(__DIR__ . '/' . DATADIR . '/config.json')) {
+    file_put_contents(__DIR__ . '/' . DATADIR . '/config.json', json_encode(['page_title' => 'Service Status', 'cache_timeout' => 15, 'uptimerobot_apikey' => '', 'cron_key' => 'fhyuncai']));
 }
 
 if (empty(getenv('Page_Config'))) {
-    $config_json = file_get_contents(__DIR__ . '/' . $dir_data . '/config.json');
+    $config_json = file_get_contents(__DIR__ . '/' . DATADIR . '/config.json');
 } else {
     $config_json = getenv('Page_Config');
 }
@@ -38,11 +41,11 @@ $config_arr = [
     'cron_key' => $config_json->cron_key ? $config_json->cron_key : 'fhyuncai'
 ];
 
-if (empty($config_arr['uptimerobot_apikey'])) die('You have to configure the Uptimerobot key in file <i>' . $dir_data . '/config.json</i>');
+if (empty($config_arr['uptimerobot_apikey'])) die('You must configure the Uptimerobot key in file <i>' . DATADIR . '/config.json</i>');
 
 //Read and update data
-if (is_file(__DIR__ . '/' . $dir_data . '/cache/cache.json') && $_GET['cron'] != $config_arr['cron_key']) {
-    $json_last_time = json_decode(file_get_contents(__DIR__ . '/' . $dir_data . '/cache/cache.json'))->time;
+if (is_file(__DIR__ . '/' . DATADIR . '/cache/cache.json') && $_GET['cron'] != $config_arr['cron_key']) {
+    $json_last_time = json_decode(file_get_contents(__DIR__ . '/' . DATADIR . '/cache/cache.json'))->time;
     if ($json_last_time < time() - ($config_arr['cache_timeout'] * 60)) {
         update_data();
         $json_last_time = time();
@@ -57,12 +60,12 @@ if ($_GET['cron'] != $config_arr['cron_key']) {
     //Calculate availability
     for ($i = 1; $i <= 30; $i++) {
         $date = date("Y/m/d", strtotime('-' . $i . ' day'));
-        if (is_dir(__DIR__ . '/' . $dir_data . '/cache/' . $date)) {
-            $cache_file_arr = scandir(__DIR__ . '/' . $dir_data . '/cache/' . $date);
+        if (is_dir(__DIR__ . '/' . DATADIR . '/cache/' . $date)) {
+            $cache_file_arr = scandir(__DIR__ . '/' . DATADIR . '/cache/' . $date);
             foreach ($cache_file_arr as $value) {
                 if ($value == '.' || $value == '..') continue;
                 if (!strstr($value, '.json')) continue;
-                $json_str = file_get_contents(__DIR__ . '/' . $dir_data . '/cache/' . $date . '/' . $value);
+                $json_str = file_get_contents(__DIR__ . '/' . DATADIR . '/cache/' . $date . '/' . $value);
                 check_json($json_str);
                 foreach (json_decode($json_str)->monitors as $value) {
                     $cache_data_arr[$value->name][] = $value->status;
@@ -91,7 +94,7 @@ if ($_GET['cron'] != $config_arr['cron_key']) {
     echo '<body class="theme"><div class="container main mb-4"><h4 class="font-weight-normal title">' . $config_arr['page_title'] . '</h4><p class="desc">Last check at ' . date('Y-m-d H:i', $json_last_time) . '<p>';
     echo '<ul class="list-group">';
 
-    $json_decode = json_decode(file_get_contents(__DIR__ . '/' . $dir_data . '/cache/cache.json'));
+    $json_decode = json_decode(file_get_contents(__DIR__ . '/' . DATADIR . '/cache/cache.json'));
 
     $group = [];
     foreach ($json_decode->monitors as $monitor) {
@@ -142,7 +145,8 @@ if ($_GET['cron'] != $config_arr['cron_key']) {
     echo 'Data update success';
 }
 
-//Functions
+
+/* Functions */
 function curl_uptimerobot()
 {
     global $config_arr;
@@ -176,17 +180,16 @@ function curl_uptimerobot()
 
 function update_data()
 {
-    global $dir_data;
     $json_curl = curl_uptimerobot();
-    if (is_file(__DIR__ . '/' . $dir_data . '/cache/cache.json')) {
-        $json_old_time = json_decode(file_get_contents(__DIR__ . '/' . $dir_data . '/cache/cache.json'))->time;
-        copy(__DIR__ . '/' . $dir_data . '/cache/cache.json', __DIR__ . '/' . $dir_data . '/cache/' . date("Y/m/d", $json_old_time) . '/' . $json_old_time . '.json');
+    if (is_file(__DIR__ . '/' . DATADIR . '/cache/cache.json')) {
+        $json_old_time = json_decode(file_get_contents(__DIR__ . '/' . DATADIR . '/cache/cache.json'))->time;
+        copy(__DIR__ . '/' . DATADIR . '/cache/cache.json', __DIR__ . '/' . DATADIR . '/cache/' . date("Y/m/d", $json_old_time) . '/' . $json_old_time . '.json');
     }
     $json_arr = json_decode($json_curl);
     foreach ($json_arr->monitors as $value) {
         $json_arr_monitors[] = ['name' => $value->friendly_name, 'url' => $value->url, 'status' => $value->status];
     }
-    file_put_contents(__DIR__ . '/' . $dir_data . '/cache/cache.json', json_encode(array('time' => time(), 'monitors' => $json_arr_monitors)));
+    file_put_contents(__DIR__ . '/' . DATADIR . '/cache/cache.json', json_encode(array('time' => time(), 'monitors' => $json_arr_monitors)));
     return;
 }
 
