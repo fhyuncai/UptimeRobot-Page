@@ -3,9 +3,10 @@
 /**
  * UptimeRobot-Page
  * Status page based on UptimeRobot
- * Version: 1.41
+ * Version: 1.42
  * Update time: 2022-07-17
  * Author: FHYunCai (https://yuncaioo.com)
+ * Link: https://github.com/fhyuncai/UptimeRobot-Page
  **/
 
 date_default_timezone_set('PRC');
@@ -94,7 +95,7 @@ if ($_GET['cron'] != $config_arr['cron_key']) {
         $uptime_per = isset($act_per_arr[$monitor->name]) ? $act_per_arr[$monitor->name] : 100;
         echo '<div class="item-desc"><strong>' . $uptime_per . '%</strong> uptime for the last 30 days.</div>';
         echo '<div class="d-flex">';
-        for ($i = 1; $i <= 30; $i++) {
+        for ($i = 30; $i >= 1; $i--) { // 倒序排列
             $uptime_day_per = $act_per_day_arr[$monitor->name][$i];
             if (!isset($uptime_day_per)) {
                 $uptime_status = 'nodata';
@@ -116,7 +117,7 @@ if ($_GET['cron'] != $config_arr['cron_key']) {
     echo '<!--Exec time: ' . round($record_time_e[0] + $record_time_e[1] - ($record_time_s[0] + $record_time_s[1]), 5) . '-->';
 } else {
     $record_time_e = explode(' ', microtime());
-    echo 'Data update success, Time: ' . round($record_time_e[0] + $record_time_e[1] - ($record_time_s[0] + $record_time_s[1]), 5);
+    echo 'Success (' . round($record_time_e[0] + $record_time_e[1] - ($record_time_s[0] + $record_time_s[1]), 5) . ')';
 }
 
 
@@ -170,7 +171,7 @@ function update_data()
 
 function calculate()
 {
-    //Calculate availability
+    // Calculate availability
     for ($i = 1; $i <= 30; $i++) {
         $date = date("Y/m/d", strtotime('-' . $i . ' day'));
         if (is_dir(__DIR__ . '/' . DATADIR . '/cache/' . $date)) {
@@ -191,7 +192,7 @@ function calculate()
                     foreach ($value as $value) {
                         if ($value == 2) $check_up++;
                     }
-                    $act_per_day_arr[$key][$i] = round($check_up / $check_num * 100, 2); //Percentage per day
+                    $act_per_day_arr[$key][$i] = round($check_up / $check_num * 100, 2); // 每天可用性
                 }
                 unset($cache_data_arr);
             }
@@ -201,7 +202,7 @@ function calculate()
 
     if (isset($act_per_day_arr)) {
         foreach ($act_per_day_arr as $key => $value) {
-            $act_per_arr[$key] = round(array_sum($value) / count($value), 2); //Percentage of 30days
+            $act_per_arr[$key] = round(array_sum($value) / count($value), 2); // 30天可用性
         }
         $saveData['act_per_arr'] = $act_per_arr;
     }
