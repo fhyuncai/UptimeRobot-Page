@@ -2,29 +2,8 @@
 
 A status page based on [UptimeRobot](https://uptimerobot.com)
 
-![Version](https://img.shields.io/badge/Verison-1.42-blue?style=flat-square)
+![Version](https://img.shields.io/badge/Verison-2.0alpha-blue?style=flat-square)
 ![GitHub](https://img.shields.io/github/license/fhyuncai/UptimeRobot-Page?style=flat-square)
-
-## Requirements
-
-* PHP version >= 5.4
-* UptimeRobot account
-
-## Deploy
-
-```bash
-curl -O https://raw.githubusercontent.com/fhyuncai/UptimeRobot-Page/master/index.php
-```
-
-## Configure
-
-See `Configuration` in `index.php`.
-
-## Group Usage
-
-You can use Parser to group, And default Parser is `Group/Name`.
-
-# 中文说明
 
 ## 环境要求
 
