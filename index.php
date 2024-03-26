@@ -3,8 +3,8 @@
 /**
  * UptimeRobot-Page
  * Status page based on UptimeRobot
- * Version: 2.0alpha
- * Update time: 2023-12-18
+ * Version: 2.0alpha3
+ * Update time: 2024-03-26
  * Author: FHYunCai (https://yuncaioo.com)
  * Link: https://github.com/fhyuncai/UptimeRobot-Page
  **/
@@ -75,7 +75,7 @@ function updateData()
     $dataArr = json_decode($requestApi, true);
 
     if (isset($dataArr['stat']) && $dataArr['stat'] == 'ok') {
-        $pageViewContent .= '<!DOCTYPE html><html><head><meta charset="utf-8"><meta name="viewport"content="width=device-width,initial-scale=1"><title>' . $_configPageTitle . '</title><link rel="stylesheet"href="https://cdn.staticfile.org/twitter-bootstrap/4.5.3/css/bootstrap.min.css"><style>.theme{background:#eef2f6}.main{max-width:600px}.title{margin:1em 0;margin-left:1px}.desc{font-size:80%;margin-left:1px}.item-desc{font-size:.78em;margin-top:.5em;margin-bottom:.5em}.icon-status{height:1em;width:1em;display:block;margin-top:auto!important;margin-bottom:auto!important;background-repeat:no-repeat;border-radius:100%}.icon-uptime{height:1.6em;width:100%;margin:0 1px;opacity:.75}.icon-status.up,.icon-uptime.up{background:#6ac259}.icon-status.seemdown,.icon-uptime.seemdown{background:#ffdd57}.icon-status.down,.icon-uptime.down{background:#f05228}.icon-status.pause,.icon-uptime.pause{background:#111}.icon-uptime.nodata{background:#e5e5e5}</style></head>';
+        $pageViewContent .= '<!DOCTYPE html><html><head><meta charset="utf-8"><meta name="viewport"content="width=device-width,initial-scale=1"><title>' . $_configPageTitle . '</title><link rel="stylesheet"href="https://cdn.staticfile.net/twitter-bootstrap/4.5.3/css/bootstrap.min.css"><style>.theme{background:#eef2f6}.main{max-width:600px}.title{margin:1em 0;margin-left:1px}.desc{font-size:80%;margin-left:1px}.item-desc{font-size:.78em;margin-top:.5em;margin-bottom:.5em}.icon-status{height:1em;width:1em;display:block;margin-top:auto!important;margin-bottom:auto!important;background-repeat:no-repeat;border-radius:100%}.icon-uptime{height:1.6em;width:100%;margin:0 1px;opacity:.75}.icon-status.up,.icon-uptime.up{background:#6ac259}.icon-status.seemdown,.icon-uptime.seemdown{background:#ffdd57}.icon-status.down,.icon-uptime.down{background:#f05228}.icon-status.pause,.icon-uptime.pause{background:#111}.icon-uptime.nodata{background:#e5e5e5}</style></head>';
         $pageViewContent .= '<body class="theme"><div class="container main mb-4"><h4 class="font-weight-normal title">' . $_configPageTitle . '</h4><p class="desc">状态更新于 ' . date('Y-m-d H:i') . '<p>';
         $pageViewContent .= '<ul class="list-group">';
 
@@ -132,32 +132,40 @@ function updateData()
             }
 
             $pageViewContent .= '<li class="list-group-item"><div class="d-flex justify-content-between">' . $monitorNameArr[1] . '<div class="icon-status ' . $monitorStatus[1] . '" data-toggle="icon-status" title="' . $monitorStatus[0] . '"></div></div>';
-            $pageViewContent .= '<div class="item-desc">最近 30 天可用率 <strong>' . $average . '%</strong></div>';
+            $pageViewContent .= '<div class="item-desc">最近 30 天可用率 <strong>' . (($average != 0 || $average == 0 && $total['times'] !== 0) ? $average : '-') . '%</strong></div>';
             $pageViewContent .= '<div class="d-flex">';
 
+            $lastStatus = 0; // 0=nodata, 1=up, 2=seemdown, 3=down
             foreach ($daily as $value) {
                 $statusDesc = date('Y-m-d ', strtotime($value['date']));
+                if ($value['down']['times'] !== 0) $statusDesc .= '故障 ' . $value['down']['times'] . ' 次，';
+                if ($value['down']['duration'] !== 0) $statusDesc .= '累计 ' . formatDuration($value['down']['duration']) . '，';
+
                 if ($value['uptime'] >= 100) {
+                    $lastStatus = 1;
                     $statusClass = 'up';
                     $statusDesc .= '可用率 ' . $value['uptime'] . '%';
-                } elseif ($value['uptime'] <= 0) {
-                    if ($value['down']['times'] === 0) {
+                } elseif ($value['uptime'] <= 95) {
+                    if ($value['down']['times'] === 0 && $lastStatus === 0) {
+                        $lastStatus = 0;
                         $statusClass = 'nodata';
                         $statusDesc .= '无数据';
                     } else {
+                        $lastStatus = 3;
                         $statusClass = 'down';
-                        $statusDesc .= '故障 ' . $value['down']['times'] . ' 次，累计 ' . formatDuration($value['down']['duration']) . '，可用率 ' . $value['uptime'] . '%';
+                        $statusDesc .= '可用率 ' . $value['uptime'] . '%';
                     }
                 } else {
+                    $lastStatus = 2;
                     $statusClass = 'seemdown';
-                    $statusDesc .= '故障 ' . $value['down']['times'] . ' 次，累计 ' . formatDuration($value['down']['duration']) . '，可用率 ' . $value['uptime'] . '%';
+                    $statusDesc .= '可用率 ' . $value['uptime'] . '%';
                 }
                 $pageViewContent .= '<div class="icon-uptime ' . $statusClass . '" data-toggle="icon-uptime" title="' . $statusDesc . '"></div>';
             }
             $pageViewContent .= '</div></li>';
         }
 
-        $pageViewContent .= '</ul></div><script src="https://cdn.staticfile.org/jquery/3.2.1/jquery.min.js"></script><script src="https://cdn.staticfile.org/popper.js/1.16.1/umd/popper.min.js"></script><script src="https://cdn.staticfile.org/twitter-bootstrap/4.5.3/js/bootstrap.min.js"></script><script>$(function(){$(\'[data-toggle="icon-status"]\').tooltip();$(\'[data-toggle="icon-uptime"]\').tooltip();});</script></body></html>';
+        $pageViewContent .= '</ul></div><script src="https://cdn.staticfile.net/jquery/3.2.1/jquery.min.js"></script><script src="https://cdn.staticfile.net/popper.js/1.16.1/umd/popper.min.js"></script><script src="https://cdn.staticfile.net/twitter-bootstrap/4.5.3/js/bootstrap.min.js"></script><script>$(function(){$(\'[data-toggle="icon-status"]\').tooltip();$(\'[data-toggle="icon-uptime"]\').tooltip();});</script></body></html>';
         //$recordTimeEnd = explode(' ', microtime());
         //$pageViewContent .= '<!--Exec:' . round($recordTimeEnd[0] + $recordTimeEnd[1] - ($recordTimeStart[0] + $recordTimeStart[1]), 5) . '-->';
 
@@ -208,7 +216,7 @@ function formatDuration(int $seconds) {
         $seconds = round($seconds % 60);
         if ($minutes >= 60) {
             $hours = round($minutes / 60);
-            $hours = round($minutes % 60);
+            $minutes = round($minutes % 60);
         }
     }
     $text = "{$seconds} 秒";
