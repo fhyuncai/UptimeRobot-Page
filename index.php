@@ -3,8 +3,8 @@
 /**
  * UptimeRobot-Page
  * Status page based on UptimeRobot
- * Version: 2.0alpha3
- * Update time: 2024-03-26
+ * Version: 2.0alpha4
+ * Update time: 2024-03-28
  * Author: FHYunCai (https://yuncaioo.com)
  * Link: https://github.com/fhyuncai/UptimeRobot-Page
  **/
@@ -99,8 +99,8 @@ function updateData()
 
             $total = ['times' => 0, 'duration' => 0];
             foreach ($monitor['logs'] as $key => $value) {
-                if ($value['type'] == 1) {
-                    $date = date('Ymd', $value['datetime']);
+                $date = date('Ymd', $value['datetime']);
+                if ($value['type'] == 1 && isset($daily[$map[$date]])) {
                     $total['duration'] += $value['duration'];
                     $total['times'] += 1;
                     $daily[$map[$date]]['down']['duration'] += $value['duration'];
